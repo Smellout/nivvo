@@ -110,11 +110,9 @@ class _Greeting extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(authStateProvider);
-    final user = ref.watch(supabaseProvider).auth.currentUser;
-    final name = (user?.userMetadata?['name'] as String?)?.trim().split(' ').first ?? '';
+    final name = ref.watch(userProfileProvider).name.split(' ').first;
     final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? 'Bom dia' : (hour < 18 ? 'Boa tarde' : 'Boa noite');
+    final greeting = hour < 5 || hour >= 18 ? 'Boa noite' : (hour < 12 ? 'Bom dia' : 'Boa tarde');
     final date = DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(DateTime.now());
 
     return Padding(

@@ -22,6 +22,15 @@ final currentUserIdProvider = Provider<String?>((ref) {
   return ref.watch(supabaseProvider).auth.currentUser?.id;
 });
 
+typedef UserProfile = ({String name, String email});
+
+/// Nome e e-mail do usuário logado (vem dos metadados do Supabase Auth).
+final userProfileProvider = Provider<UserProfile>((ref) {
+  ref.watch(authStateProvider);
+  final user = ref.watch(supabaseProvider).auth.currentUser;
+  return (name: ((user?.userMetadata?['name'] as String?) ?? '').trim(), email: user?.email ?? '');
+});
+
 /// Incrementado após qualquer escrita: todas as leituras dependem dele e recarregam.
 class DataRevision extends Notifier<int> {
   @override

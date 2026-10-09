@@ -46,6 +46,20 @@ flutter run --dart-define-from-file=env.json
 Build de release: `flutter build apk --release --dart-define-from-file=env.json`
 (configure antes uma chave de assinatura própria em `android/app/build.gradle.kts`).
 
+## Prévia no navegador (sem Supabase, sem emulador)
+
+O **modo demonstração** roda o app real com dados fictícios em memória (mesmas regras financeiras do banco):
+
+```bash
+flutter run -d chrome --dart-define=DEMO=true            # desenvolvimento, com hot reload
+# ou gerar e servir a versão compilada:
+flutter build web --release --dart-define=DEMO=true --no-web-resources-cdn
+python -m http.server 8080 --directory build/web         # abra http://localhost:8080
+```
+
+No computador o app aparece numa moldura de celular; no celular (mesma rede Wi-Fi,
+`http://IP-DO-PC:8080`) ocupa a tela inteira. Nada é salvo — recarregar volta aos dados iniciais.
+
 ## Testes
 
 ```bash

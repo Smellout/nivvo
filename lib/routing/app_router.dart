@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/config/env.dart';
 import '../features/auth/auth_screens.dart';
 import '../features/clients/client_detail_screen.dart';
 import '../features/clients/clients_screen.dart';
@@ -31,7 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: refresh,
     redirect: (context, state) {
-      final loggedIn = auth.currentSession != null;
+      final loggedIn = Env.demo || auth.currentSession != null;
       final recovering = ref.read(passwordRecoveryProvider);
       final loc = state.matchedLocation;
       final onAuthRoute = loc.startsWith('/auth');

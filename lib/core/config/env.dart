@@ -8,5 +8,8 @@ abstract final class Env {
   /// Deep link de retorno dos e-mails de autenticação (ver AndroidManifest).
   static const authRedirect = 'com.nivvo.app://auth-callback';
 
+  /// `--dart-define=DEMO=true`: roda com dados fictícios, sem Supabase (prévia no navegador).
+  static const demo = bool.fromEnvironment('DEMO');
+
   static bool get isConfigured => supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty;
 }

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/config/env.dart';
+import 'demo/demo_mode.dart';
 import 'features/notifications/reminder_service.dart';
 import 'shared/services/core_providers.dart';
 import 'theme/app_theme.dart';
@@ -15,6 +16,18 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Intl.defaultLocale = 'pt_BR';
   await initializeDateFormatting('pt_BR');
+
+  if (Env.demo) {
+    final prefs = await SharedPreferences.getInstance();
+    runApp(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs), ...demoOverrides(prefs)],
+        retry: (_, _) => null,
+        child: const NivvoApp(),
+      ),
+    );
+    return;
+  }
 
   if (!Env.isConfigured) {
     runApp(const _MissingConfigApp());

@@ -18,9 +18,8 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final controller = ref.read(settingsProvider.notifier);
-    ref.watch(authStateProvider);
-    final user = ref.watch(supabaseProvider).auth.currentUser;
-    final name = (user?.userMetadata?['name'] as String?) ?? '';
+    final profile = ref.watch(userProfileProvider);
+    final name = profile.name;
     final c = context.colors;
 
     return Scaffold(
@@ -35,7 +34,7 @@ class SettingsScreen extends ConsumerWidget {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 leading: InitialsAvatar(name.isEmpty ? '?' : name.trim()[0].toUpperCase(), size: 46),
                 title: Text(name.isEmpty ? 'Seu perfil' : name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text(user?.email ?? ''),
+                subtitle: Text(profile.email),
                 trailing: const Icon(Icons.edit_outlined, size: 20),
                 onTap: () => _editName(context, ref, name),
               ),
@@ -98,8 +97,8 @@ class SettingsScreen extends ConsumerWidget {
                     leading: const Icon(Icons.lock_reset_rounded),
                     title: const Text('Alterar senha'),
                     onTap: () async {
-                      final email = user?.email;
-                      if (email == null) return;
+                      final email = profile.email;
+                      if (email.isEmpty) return;
                       try {
                         await ref.read(authRepositoryProvider).sendPasswordReset(email);
                         if (context.mounted) AppFeedback.success(context, 'Enviamos um link para $email');

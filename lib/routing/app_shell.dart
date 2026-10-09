@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../core/config/env.dart';
 import '../features/notifications/reminder_service.dart';
+import '../theme/app_colors.dart';
 import '../shared/widgets/common.dart';
 
 /// Estrutura principal: navegação inferior + botão "Nova operação" sempre à mão.
@@ -51,7 +53,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     return Scaffold(
       body: Column(
         children: [
-          const SafeArea(bottom: false, child: OfflineBanner()),
+          SafeArea(bottom: false, child: Column(children: [if (Env.demo) const _DemoBanner(), const OfflineBanner()])),
           Expanded(
             child: MediaQuery.removePadding(context: context, removeTop: true, child: widget.shell),
           ),
@@ -95,6 +97,25 @@ class _AppShellState extends ConsumerState<AppShell> {
             label: 'Ajustes',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DemoBanner extends StatelessWidget {
+  const _DemoBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      color: c.brand.withValues(alpha: 0.14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Text(
+        'Modo demonstração · dados fictícios, nada é salvo',
+        textAlign: TextAlign.center,
+        style: TextStyle(color: c.brand, fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }
