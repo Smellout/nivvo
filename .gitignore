@@ -51,3 +51,6 @@ app.*.map.json
 env.json
 supabase/tests/node_modules/
 supabase/.temp/
+
+# Cache do Kotlin (build Android)
+android/.kotlin/

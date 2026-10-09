@@ -61,6 +61,21 @@ python -m http.server 8080 --directory build/web         # abra http://localhost
 No computador o app aparece numa moldura de celular; no celular (mesma rede Wi-Fi,
 `http://IP-DO-PC:8080`) ocupa a tela inteira. Nada é salvo — recarregar volta aos dados iniciais.
 
+## Retomar o projeto em outro computador
+
+O repositório tem todo o código. Ficam **fora do Git**, por segurança, e precisam ser recriados:
+
+1. **`env.json`** — copie `env.example.json` e preencha com a *Project URL* e a *Publishable key*
+   do Supabase (Project Settings → API Keys). O banco já está criado no Supabase; não rode a
+   migration de novo.
+2. **Chave de assinatura Android** (só para gerar APK de release) — crie com
+   `keytool -genkeypair -keystore nivvo-release.jks -storetype PKCS12 -alias nivvo -keyalg RSA -keysize 4096 -validity 10000`
+   e um `android/key.properties` com `storeFile`, `storePassword`, `keyAlias` e `keyPassword`.
+   Guarde a chave com backup: atualizações do app instalado exigem a mesma chave.
+3. Ferramentas: Flutter 3.47+, JDK 21 e Android SDK (Android Studio ou command-line tools
+   **versão 19.0** no Windows — a 20+ quebra a instalação do NDK). Reserve ~10 GB livres em disco.
+4. APK: `flutter build apk --release --target-platform android-arm64 --dart-define-from-file=env.json`
+
 ## Testes
 
 ```bash
