@@ -11,6 +11,8 @@ class AppSettings {
     required this.hideAmountsInReminders,
     required this.lastRateHundredths,
     required this.lastTermDays,
+    required this.keepSignedIn,
+    this.lastEmail,
   });
 
   final ThemeMode themeMode;
@@ -21,12 +23,20 @@ class AppSettings {
   final int? lastRateHundredths;
   final int? lastTermDays;
 
+  /// Mantém a sessão salva entre aberturas do app (padrão: sim).
+  final bool keepSignedIn;
+
+  /// Último e-mail usado no login (pré-preenche a tela de entrada).
+  final String? lastEmail;
+
   AppSettings copyWith({
     ThemeMode? themeMode,
     bool? remindersEnabled,
     bool? hideAmountsInReminders,
     int? lastRateHundredths,
     int? lastTermDays,
+    bool? keepSignedIn,
+    String? lastEmail,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -34,6 +44,8 @@ class AppSettings {
       hideAmountsInReminders: hideAmountsInReminders ?? this.hideAmountsInReminders,
       lastRateHundredths: lastRateHundredths ?? this.lastRateHundredths,
       lastTermDays: lastTermDays ?? this.lastTermDays,
+      keepSignedIn: keepSignedIn ?? this.keepSignedIn,
+      lastEmail: lastEmail ?? this.lastEmail,
     );
   }
 }
@@ -44,6 +56,8 @@ class SettingsController extends Notifier<AppSettings> {
   static const _kHideAmounts = 'settings.hideAmounts';
   static const _kLastRate = 'settings.lastRate';
   static const _kLastTerm = 'settings.lastTerm';
+  static const kKeepSignedIn = 'settings.keepSignedIn';
+  static const _kLastEmail = 'settings.lastEmail';
 
   @override
   AppSettings build() {
@@ -54,6 +68,8 @@ class SettingsController extends Notifier<AppSettings> {
       hideAmountsInReminders: p.getBool(_kHideAmounts) ?? false,
       lastRateHundredths: p.getInt(_kLastRate),
       lastTermDays: p.getInt(_kLastTerm),
+      keepSignedIn: p.getBool(kKeepSignedIn) ?? true,
+      lastEmail: p.getString(_kLastEmail),
     );
   }
 
@@ -70,6 +86,16 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setHideAmounts(bool value) async {
     state = state.copyWith(hideAmountsInReminders: value);
     await ref.read(sharedPreferencesProvider).setBool(_kHideAmounts, value);
+  }
+
+  Future<void> setKeepSignedIn(bool value) async {
+    state = state.copyWith(keepSignedIn: value);
+    await ref.read(sharedPreferencesProvider).setBool(kKeepSignedIn, value);
+  }
+
+  Future<void> rememberEmail(String email) async {
+    state = state.copyWith(lastEmail: email.trim());
+    await ref.read(sharedPreferencesProvider).setString(_kLastEmail, email.trim());
   }
 
   Future<void> rememberLoanDefaults({required int rateHundredths, required int termDays}) async {

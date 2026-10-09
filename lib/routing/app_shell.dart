@@ -8,6 +8,7 @@ import '../features/notifications/reminder_service.dart';
 import '../shared/models/client.dart';
 import '../theme/app_colors.dart';
 import '../shared/widgets/common.dart';
+import '../shared/widgets/welcome_overlay.dart';
 
 /// Estrutura principal: navegação inferior + botão "Nova operação" sempre à mão.
 class AppShell extends ConsumerStatefulWidget {
@@ -21,6 +22,9 @@ class AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<AppShell> {
   final _reminders = ReminderService.instance;
+
+  /// Saudação animada exibida uma vez a cada entrada no app (abertura ou login).
+  bool _showWelcome = true;
 
   @override
   void initState() {
@@ -55,7 +59,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     final c = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    final shell = Scaffold(
       backgroundColor: c.background,
       // O conteúdo passa por trás da barra de navegação de vidro.
       extendBody: true,
@@ -128,6 +132,13 @@ class _AppShellState extends ConsumerState<AppShell> {
           ),
         ),
       ),
+    );
+
+    return Stack(
+      children: [
+        shell,
+        if (_showWelcome) Positioned.fill(child: WelcomeOverlay(onDone: () => setState(() => _showWelcome = false))),
+      ],
     );
   }
 }

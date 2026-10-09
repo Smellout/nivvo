@@ -9,6 +9,7 @@ import 'app.dart';
 import 'core/config/env.dart';
 import 'demo/demo_mode.dart';
 import 'features/notifications/reminder_service.dart';
+import 'features/settings/settings_controller.dart';
 import 'shared/services/core_providers.dart';
 import 'theme/app_theme.dart';
 
@@ -39,6 +40,16 @@ Future<void> main() async {
     Supabase.initialize(url: Env.supabaseUrl, publishableKey: Env.supabaseKey),
   ]);
 
+  final prefs = results[0]! as SharedPreferences;
+  final auth = Supabase.instance.client.auth;
+  if (prefs.getBool(SettingsController.kKeepSignedIn) == false && auth.currentSession != null) {
+    try {
+      await auth.signOut();
+    } catch (_) {
+      // Offline: a sessão local é removida mesmo assim.
+    }
+  }
+
   try {
     await ReminderService.instance.init();
   } catch (e) {
@@ -48,7 +59,7 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(results[0]! as SharedPreferences)],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       // Erros aparecem na hora (com "Tentar de novo"), sem novas tentativas automáticas.
       retry: (_, _) => null,
       child: const NivvoApp(),

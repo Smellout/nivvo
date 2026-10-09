@@ -8,6 +8,7 @@ import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/nivvo_logo.dart';
 import '../../theme/app_colors.dart';
+import '../settings/settings_controller.dart';
 
 /// Verdadeiro enquanto o usuário veio do link "redefinir senha".
 class PasswordRecovery extends Notifier<bool> {
@@ -130,6 +131,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _busy = false;
+  late bool _keepSignedIn;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = ref.read(settingsProvider);
+    _keepSignedIn = settings.keepSignedIn;
+    _email.text = settings.lastEmail ?? '';
+  }
 
   @override
   void dispose() {
@@ -143,6 +153,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _busy = true);
     try {
       await ref.read(authRepositoryProvider).signIn(email: _email.text, password: _password.text);
+      final settings = ref.read(settingsProvider.notifier);
+      await settings.setKeepSignedIn(_keepSignedIn);
+      await settings.rememberEmail(_email.text);
       // O redirecionamento do router leva ao Início.
     } catch (e) {
       if (mounted) AppFeedback.error(context, e);
@@ -180,9 +193,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(onPressed: () => context.push('/auth/forgot'), child: const Text('Esqueci minha senha')),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => setState(() => _keepSignedIn = !_keepSignedIn),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _keepSignedIn,
+                      onChanged: (v) => setState(() => _keepSignedIn = v ?? true),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                    ),
+                    const Flexible(
+                      child: Text('Manter conectado', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            TextButton(onPressed: () => context.push('/auth/forgot'), child: const Text('Esqueci a senha')),
+          ],
         ),
         const SizedBox(height: 8),
         FilledButton(onPressed: _busy ? null : _submit, child: _busy ? const _ButtonSpinner() : const Text('Entrar')),

@@ -106,6 +106,14 @@ class SettingsScreen extends ConsumerWidget {
             child: Card(
               child: Column(
                 children: [
+                  SwitchListTile(
+                    secondary: const Icon(Icons.verified_user_outlined),
+                    title: const Text('Manter conectado'),
+                    subtitle: const Text('Não pedir login ao abrir o app'),
+                    value: settings.keepSignedIn,
+                    onChanged: controller.setKeepSignedIn,
+                  ),
+                  const Divider(indent: 16),
                   ListTile(
                     leading: const Icon(Icons.lock_reset_rounded),
                     title: const Text('Alterar senha'),
