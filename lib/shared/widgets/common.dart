@@ -96,21 +96,26 @@ class OfflineBanner extends ConsumerWidget {
       curve: Curves.easeOut,
       child: !offline
           ? const SizedBox(width: double.infinity)
-          : Container(
-              width: double.infinity,
-              color: c.warning.withValues(alpha: 0.14),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Icon(Icons.wifi_off_rounded, size: 16, color: c.warning),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Offline — exibindo os últimos dados salvos',
-                      style: TextStyle(color: c.warning, fontSize: 12.5, fontWeight: FontWeight.w600),
+          : Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: c.surfaceSolid,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: c.warning.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.wifi_off_rounded, size: 15, color: c.warning),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Offline · mostrando dados salvos',
+                      style: TextStyle(color: c.warning, fontSize: 12.5, fontWeight: FontWeight.w700),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );
@@ -149,14 +154,17 @@ class InitialsAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final tint = color ?? c.brand;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // No escuro o texto clareia para manter contraste sobre o fundo tingido.
+    final textColor = isDark ? Color.lerp(tint, Colors.white, 0.45)! : tint;
     return Container(
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(color: tint.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(size * 0.36)),
+      decoration: BoxDecoration(color: tint.withValues(alpha: 0.18), shape: BoxShape.circle),
       child: Text(
         initials,
-        style: TextStyle(color: tint, fontWeight: FontWeight.w700, fontSize: size * 0.36),
+        style: TextStyle(color: textColor, fontWeight: FontWeight.w800, fontSize: size * 0.36),
       ),
     );
   }

@@ -37,7 +37,14 @@ class LoanTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           children: [
-            InitialsAvatar(initials, color: status.isOpen ? status.color(c) : c.neutral),
+            InitialsAvatar(
+              initials,
+              color: switch (status) {
+                LoanDisplayStatus.overdue => c.danger,
+                _ when status.isOpen => NivvoPalette.blueSoft,
+                _ => c.neutral,
+              },
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

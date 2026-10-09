@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/config/env.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/utils/validators.dart';
 import '../../shared/repositories/repository_providers.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/nivvo_logo.dart';
 import '../../theme/app_colors.dart';
@@ -22,7 +24,7 @@ class SettingsScreen extends ConsumerWidget {
     final name = profile.name;
     final c = context.colors;
 
-    return Scaffold(
+    return NivvoScaffold(
       appBar: AppBar(title: const Text('Ajustes')),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 40),
@@ -40,6 +42,17 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          if (Env.demo)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.science_outlined, color: c.brand),
+                  title: const Text('Modo demonstração'),
+                  subtitle: const Text('Dados fictícios em memória. Nada é salvo.'),
+                ),
+              ),
+            ),
           const SectionTitle('Aparência'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

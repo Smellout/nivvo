@@ -6,6 +6,7 @@ import '../../core/utils/dates.dart';
 import '../../shared/models/summaries.dart';
 import '../../shared/repositories/repository_providers.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../theme/app_colors.dart';
 
@@ -75,7 +76,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final report = ref.watch(reportProvider(range));
     final c = context.colors;
 
-    return Scaffold(
+    return NivvoScaffold(
       appBar: AppBar(title: const Text('Relatórios')),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -98,7 +99,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         label: Text(p.label),
                         selected: _period == p,
                         labelStyle: TextStyle(
-                          color: _period == p ? c.brand : c.text,
+                          color: _period == p ? Colors.white : c.text,
                           fontWeight: _period == p ? FontWeight.w600 : FontWeight.w500,
                         ),
                         onSelected: (_) => p == ReportPeriod.custom ? _pickCustom() : setState(() => _period = p),

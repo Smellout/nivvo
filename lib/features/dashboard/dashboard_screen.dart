@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/finance/loan_calculator.dart';
@@ -9,6 +8,7 @@ import '../../shared/models/loan.dart';
 import '../../shared/models/summaries.dart';
 import '../../shared/repositories/repository_providers.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/loan_tile.dart';
 import '../../theme/app_colors.dart';
@@ -35,51 +35,46 @@ class DashboardScreen extends ConsumerWidget {
     final summary = ref.watch(dashboardProvider);
     final upcoming = ref.watch(upcomingProvider);
     final today = ref.watch(todayProvider);
+    final overdue = summary.value?.overdueCount ?? 0;
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () => _refresh(ref),
-        child: CustomScrollView(
-          slivers: [
-            const SliverToBoxAdapter(child: _Greeting()),
-            SliverToBoxAdapter(
-              child: AsyncBody(
+    return NivvoScaffold(
+      aurora: 1,
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: () => _refresh(ref),
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 120),
+            children: [
+              _TopBar(hasAlert: overdue > 0),
+              AsyncBody(
                 value: summary,
                 onRetry: () => ref.invalidate(dashboardProvider),
-                loading: const _HeroSkeleton(),
-                data: (s) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _BalanceHero(summary: s),
-                    _Alerts(summary: s),
-                    const _NewLoanButton(),
-                    _Metrics(summary: s),
-                  ],
-                ),
+                loading: const SizedBox(height: 230),
+                data: (s) => _Balance(summary: s),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: SectionTitle(
+              _Actions(overdue: overdue),
+              AsyncBody(
+                value: summary,
+                loading: const SizedBox.shrink(),
+                data: (s) => _Alerts(summary: s),
+              ),
+              SectionTitle(
                 'Próximos vencimentos',
                 trailing: TextButton(
                   onPressed: () => context.go('/loans?filter=pending'),
                   child: const Text('Ver todas'),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: AsyncBody(
+              AsyncBody(
                 value: upcoming,
                 onRetry: () => ref.invalidate(upcomingProvider),
                 loading: const SizedBox(height: 120),
                 data: (loans) => loans.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.only(bottom: 24),
-                        child: EmptyState(
-                          icon: Icons.event_available_rounded,
-                          title: 'Nada vencendo',
-                          message: 'Nenhuma operação em aberto com vencimento próximo.',
-                        ),
+                    ? const EmptyState(
+                        icon: Icons.event_available_rounded,
+                        title: 'Nada vencendo',
+                        message: 'Nenhuma operação em aberto com vencimento próximo.',
                       )
                     : Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -88,7 +83,7 @@ class DashboardScreen extends ConsumerWidget {
                           child: Column(
                             children: [
                               for (var i = 0; i < loans.length; i++) ...[
-                                if (i > 0) const Divider(indent: 72),
+                                if (i > 0) const Divider(indent: 76, endIndent: 20),
                                 LoanTile(loan: loans[i], today: today),
                               ],
                             ],
@@ -96,35 +91,106 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                       ),
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 96)),
-          ],
+              AsyncBody(
+                value: summary,
+                loading: const SizedBox.shrink(),
+                data: (s) => _Overview(summary: s),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _Greeting extends ConsumerWidget {
-  const _Greeting();
+/// Avatar, busca e alerta — como a barra superior de um app de banco.
+class _TopBar extends ConsumerWidget {
+  const _TopBar({required this.hasAlert});
+
+  final bool hasAlert;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final name = ref.watch(userProfileProvider).name.split(' ').first;
-    final hour = DateTime.now().hour;
-    final greeting = hour < 5 || hour >= 18 ? 'Boa noite' : (hour < 12 ? 'Bom dia' : 'Boa tarde');
-    final date = DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(DateTime.now());
+    final c = context.colors;
+    final name = ref.watch(userProfileProvider).name;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final glass = isDark ? const Color(0x1AFFFFFF) : const Color(0x99FFFFFF);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      child: Row(
         children: [
-          Text(name.isEmpty ? greeting : '$greeting, $name', style: context.text.headlineSmall),
-          const SizedBox(height: 2),
-          Text(
-            date[0].toUpperCase() + date.substring(1),
-            style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
+          Material(
+            color: glass,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => context.go('/settings'),
+              child: SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: Text(
+                    name.isEmpty ? 'N' : name[0].toUpperCase(),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: c.text),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Material(
+              color: glass,
+              shape: const StadiumBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => context.go('/loans'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded, size: 20, color: c.textSecondary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Buscar',
+                        style: TextStyle(color: c.textSecondary, fontWeight: FontWeight.w600, fontSize: 14.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Material(
+            color: glass,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => context.go('/loans?filter=overdue'),
+              child: SizedBox(
+                width: 42,
+                height: 42,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(Icons.notifications_none_rounded, color: c.text, size: 22),
+                    if (hasAlert)
+                      Positioned(
+                        right: 10,
+                        top: 10,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(color: c.danger, shape: BoxShape.circle),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -132,128 +198,81 @@ class _Greeting extends ConsumerWidget {
   }
 }
 
-class _BalanceHero extends StatelessWidget {
-  const _BalanceHero({required this.summary});
+/// Saldo a receber em destaque, centralizado sobre a aurora.
+class _Balance extends StatelessWidget {
+  const _Balance({required this.summary});
 
   final DashboardSummary summary;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF1B2A55), Color(0xFF14203D), Color(0xFF0F2A2A)]
-              : const [Color(0xFF3F67F0), Color(0xFF4F7CFF), Color(0xFF2CB98C)],
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: isDark ? 0.06 : 0)),
-      ),
-      child: DefaultTextStyle.merge(
-        style: const TextStyle(color: Colors.white),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Total a receber', style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 14)),
-            const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                Money.format(summary.toReceiveCents),
-                style: const TextStyle(
-                  fontSize: 38,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -1.4,
-                  color: Colors.white,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: _HeroPart(label: 'Principal', cents: summary.principalOutstandingCents),
-                ),
-                Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.15)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _HeroPart(label: 'Juros e encargos', cents: summary.earningsOutstandingCents),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 8),
+      child: Column(
+        children: [
+          Text(
+            'Total a receber',
+            style: TextStyle(color: c.text.withValues(alpha: 0.75), fontSize: 14.5, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          BigAmount(Money.format(summary.toReceiveCents), size: 50),
+          const SizedBox(height: 16),
+          FrostedGlass(
+            radius: 999,
+            blur: 16,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            child: Text.rich(
+              TextSpan(
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: c.textSecondary),
                 children: [
-                  Icon(Icons.south_west_rounded, size: 16, color: c.success),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      'Recebido este mês  ${Money.format(summary.receivedThisMonthCents)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
+                  const TextSpan(text: 'Principal '),
+                  TextSpan(
+                    text: Money.format(summary.principalOutstandingCents),
+                    style: TextStyle(color: c.text, fontWeight: FontWeight.w800),
+                  ),
+                  const TextSpan(text: '   ·   Juros '),
+                  TextSpan(
+                    text: Money.format(summary.earningsOutstandingCents),
+                    style: TextStyle(color: c.text, fontWeight: FontWeight.w800),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _HeroPart extends StatelessWidget {
-  const _HeroPart({required this.label, required this.cents});
+class _Actions extends StatelessWidget {
+  const _Actions({required this.overdue});
 
-  final String label;
-  final int cents;
+  final int overdue;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12.5)),
-        const SizedBox(height: 2),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            Money.format(cents),
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 28, 12, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          RoundAction(icon: Icons.add_rounded, label: 'Nova', primary: true, onTap: () => context.push('/new-loan')),
+          RoundAction(
+            icon: Icons.schedule_rounded,
+            label: 'Vencendo',
+            onTap: () => context.go('/loans?filter=dueSoon'),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HeroSkeleton extends StatelessWidget {
-  const _HeroSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 210,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: context.colors.surface, borderRadius: BorderRadius.circular(26)),
+          RoundAction(
+            icon: Icons.priority_high_rounded,
+            label: 'Vencidas',
+            badge: overdue > 0,
+            onTap: () => context.go('/loans?filter=overdue'),
+          ),
+          RoundAction(icon: Icons.bar_chart_rounded, label: 'Relatórios', onTap: () => context.go('/reports')),
+        ],
+      ),
     );
   }
 }
@@ -285,9 +304,9 @@ class _Alerts extends StatelessWidget {
           onTap: () => context.go('/loans?filter=dueSoon'),
         ),
     ];
-    if (items.isEmpty) return const SizedBox(height: 4);
+    if (items.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         children: [for (final i in items) Padding(padding: const EdgeInsets.only(bottom: 8), child: i)],
       ),
@@ -306,31 +325,40 @@ class _AlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Material(
-      color: color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(16),
+      color: c.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: color.withValues(alpha: 0.35)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           child: Row(
             children: [
-              Icon(icon, color: color, size: 22),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.16), shape: BoxShape.circle),
+                child: Icon(icon, color: color, size: 20),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 14.5),
+                  style: TextStyle(color: c.text, fontWeight: FontWeight.w700, fontSize: 14.5),
                 ),
               ),
               if (value != null)
                 Text(
                   value!,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 14.5),
+                  style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 14.5),
                 ),
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right_rounded, color: color),
+              const SizedBox(width: 2),
+              Icon(Icons.chevron_right_rounded, color: c.textSecondary),
             ],
           ),
         ),
@@ -339,143 +367,80 @@ class _AlertCard extends StatelessWidget {
   }
 }
 
-class _NewLoanButton extends StatelessWidget {
-  const _NewLoanButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: FilledButton.icon(
-        onPressed: () => context.push('/new-loan'),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Nova operação'),
-      ),
-    );
-  }
-}
-
-class _Metrics extends StatelessWidget {
-  const _Metrics({required this.summary});
+/// Visão geral da carteira num único cartão (em vez de vários blocos soltos).
+class _Overview extends StatelessWidget {
+  const _Overview({required this.summary});
 
   final DashboardSummary summary;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final tiles = [
-      _Metric(
+    final rows = [
+      ('Recebido este mês', Money.format(summary.receivedThisMonthCents), Icons.south_west_rounded, c.success),
+      ('Juros recebidos', Money.format(summary.earningsReceivedCents), Icons.trending_up_rounded, c.success),
+      ('Total emprestado', Money.format(summary.totalLentCents), Icons.north_east_rounded, NivvoPalette.blueSoft),
+      ('Total recebido', Money.format(summary.totalReceivedCents), Icons.account_balance_wallet_outlined, c.text),
+      (
         'Operações ativas',
-        '${summary.activeCount}',
+        '${summary.activeCount}  ·  ${summary.dueSoonCount + summary.dueTodayCount} vencendo em '
+            '${LoanStatusRules.dueSoonDays} dias',
         Icons.swap_vert_rounded,
-        c.brand,
-        () => context.go('/loans?filter=pending'),
-      ),
-      _Metric(
-        'Vencendo (${LoanStatusRules.dueSoonDays} dias)',
-        '${summary.dueSoonCount + summary.dueTodayCount}',
-        Icons.schedule_rounded,
-        c.warning,
-        () => context.go('/loans?filter=dueSoon'),
-      ),
-      _Metric(
-        'Vencidas',
-        '${summary.overdueCount}',
-        Icons.error_outline_rounded,
-        c.danger,
-        () => context.go('/loans?filter=overdue'),
-      ),
-      _Metric(
-        'Total emprestado',
-        Money.format(summary.totalLentCents),
-        Icons.north_east_rounded,
         NivvoPalette.blueSoft,
-        null,
-      ),
-      _Metric('Total recebido', Money.format(summary.totalReceivedCents), Icons.south_west_rounded, c.success, null),
-      _Metric(
-        'Juros recebidos',
-        Money.format(summary.earningsReceivedCents),
-        Icons.trending_up_rounded,
-        c.success,
-        null,
       ),
     ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.75,
-        children: [for (final t in tiles) _MetricCard(metric: t)],
-      ),
-    );
-  }
-}
-
-class _Metric {
-  const _Metric(this.label, this.value, this.icon, this.color, this.onTap);
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.metric});
-
-  final _Metric metric;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: metric.onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SectionTitle('Visão geral'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
                 children: [
-                  Icon(metric.icon, size: 18, color: metric.color),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      metric.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: c.textSecondary, fontSize: 12.5),
+                  for (var i = 0; i < rows.length; i++) ...[
+                    if (i > 0) const Divider(indent: 68, endIndent: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(color: c.surfaceHigh, shape: BoxShape.circle),
+                            child: Icon(rows[i].$3, size: 18, color: rows[i].$4),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              rows[i].$1,
+                              style: TextStyle(color: c.textSecondary, fontWeight: FontWeight.w600, fontSize: 14),
+                            ),
+                          ),
+                          Flexible(
+                            child: Text(
+                              rows[i].$2,
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                color: c.text,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  metric.value,
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    color: c.text,
-                    letterSpacing: -0.4,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

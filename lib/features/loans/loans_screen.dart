@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../shared/repositories/loans_repository.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/loan_tile.dart';
 import '../../theme/app_colors.dart';
@@ -66,7 +67,7 @@ class _LoansScreenState extends ConsumerState<LoansScreen> {
     final today = ref.watch(todayProvider);
     final c = context.colors;
 
-    return Scaffold(
+    return NivvoScaffold(
       appBar: AppBar(title: const Text('Operações')),
       body: Column(
         children: [
@@ -95,7 +96,7 @@ class _LoansScreenState extends ConsumerState<LoansScreen> {
                       selected: _filter == f,
                       onSelected: (_) => setState(() => _filter = f),
                       labelStyle: TextStyle(
-                        color: _filter == f ? c.brand : c.text,
+                        color: _filter == f ? Colors.white : c.text,
                         fontWeight: _filter == f ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),

@@ -85,6 +85,7 @@ class MoneyField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: '0,00',
+        hintStyle: style.copyWith(color: c.textSecondary.withValues(alpha: 0.6)),
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 16, right: 8),
           child: Text(

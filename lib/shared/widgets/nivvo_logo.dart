@@ -22,7 +22,17 @@ class NivvoMark extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(gradient: NivvoPalette.brandGradient, borderRadius: BorderRadius.circular(size * 0.3)),
+      decoration: BoxDecoration(
+        gradient: NivvoPalette.brandGradient,
+        borderRadius: BorderRadius.circular(size * 0.3),
+        boxShadow: [
+          BoxShadow(
+            color: NivvoPalette.blue.withValues(alpha: 0.45),
+            blurRadius: size * 0.6,
+            offset: Offset(0, size * 0.15),
+          ),
+        ],
+      ),
       child: glyph,
     );
   }

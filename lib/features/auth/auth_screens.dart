@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/utils/validators.dart';
 import '../../shared/repositories/repository_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/nivvo_logo.dart';
 import '../../theme/app_colors.dart';
@@ -28,7 +29,8 @@ class _AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return NivvoScaffold(
+      aurora: 1,
       appBar: showBack ? AppBar() : null,
       body: SafeArea(
         child: Center(
@@ -40,16 +42,25 @@ class _AuthScaffold extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (!showBack) ...[
-                    const Center(child: NivvoWordmark(height: 40, showTagline: true)),
-                    const SizedBox(height: 48),
+                    const Center(child: NivvoWordmark(height: 44, showTagline: true)),
+                    const SizedBox(height: 40),
                   ],
-                  Text(title, style: context.text.headlineSmall),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 6),
-                    Text(subtitle!, style: TextStyle(color: context.colors.textSecondary, fontSize: 15)),
-                  ],
-                  const SizedBox(height: 24),
-                  ...children,
+                  FrostedGlass(
+                    radius: 28,
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(title, style: context.text.headlineSmall),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 6),
+                          Text(subtitle!, style: TextStyle(color: context.colors.textSecondary, fontSize: 15)),
+                        ],
+                        const SizedBox(height: 22),
+                        ...children,
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

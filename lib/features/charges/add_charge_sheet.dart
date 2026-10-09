@@ -103,7 +103,7 @@ class _AddChargeSheetState extends ConsumerState<_AddChargeSheet> {
                     ChoiceChip(
                       label: Text(t.label),
                       selected: _type == t,
-                      labelStyle: TextStyle(color: _type == t ? c.brand : c.text, fontWeight: FontWeight.w600),
+                      labelStyle: TextStyle(color: _type == t ? Colors.white : c.text, fontWeight: FontWeight.w700),
                       onSelected: (_) => setState(() => _type = t),
                     ),
                 ],

@@ -8,6 +8,7 @@ import '../../core/money/money.dart';
 import '../../core/utils/validators.dart';
 import '../../shared/models/client.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../theme/app_colors.dart';
 import 'client_sheets.dart';
@@ -44,7 +45,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   Widget build(BuildContext context) {
     final page = ref.watch(clientsPagerProvider(_search));
 
-    return Scaffold(
+    return NivvoScaffold(
       appBar: AppBar(
         title: const Text('Clientes'),
         actions: [

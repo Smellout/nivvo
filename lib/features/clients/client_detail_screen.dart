@@ -7,6 +7,7 @@ import '../../core/utils/validators.dart';
 import '../../shared/models/client.dart';
 import '../../shared/repositories/loans_repository.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/loan_tile.dart';
 import '../../theme/app_colors.dart';
@@ -27,7 +28,7 @@ class ClientDetailScreen extends ConsumerWidget {
     final today = ref.watch(todayProvider);
     final client = summary.value?.client;
 
-    return Scaffold(
+    return NivvoScaffold(
       appBar: AppBar(
         title: Text(client?.name ?? 'Cliente'),
         actions: [

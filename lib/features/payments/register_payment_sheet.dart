@@ -12,19 +12,22 @@ import '../../shared/widgets/money_input.dart';
 import '../../theme/app_colors.dart';
 
 /// Registra um recebimento (parcial ou quitação). Retorna `true` se salvou.
-Future<bool?> showRegisterPayment(BuildContext context, Loan loan) {
+Future<bool?> showRegisterPayment(BuildContext context, Loan loan, {bool settle = false}) {
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => _RegisterPaymentSheet(loan: loan),
+    builder: (_) => _RegisterPaymentSheet(loan: loan, settle: settle),
   );
 }
 
 class _RegisterPaymentSheet extends ConsumerStatefulWidget {
-  const _RegisterPaymentSheet({required this.loan});
+  const _RegisterPaymentSheet({required this.loan, this.settle = false});
 
   final Loan loan;
+
+  /// Abre já preenchido com o saldo total (atalho "Quitar").
+  final bool settle;
 
   @override
   ConsumerState<_RegisterPaymentSheet> createState() => _RegisterPaymentSheetState();
@@ -40,6 +43,15 @@ class _RegisterPaymentSheetState extends ConsumerState<_RegisterPaymentSheet> {
   bool _busy = false;
 
   Loan get loan => widget.loan;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.settle) {
+      _amount.text = Money.formatPlain(loan.remainingCents);
+      _cents = loan.remainingCents;
+    }
+  }
 
   @override
   void dispose() {
@@ -156,10 +168,10 @@ class _RegisterPaymentSheetState extends ConsumerState<_RegisterPaymentSheet> {
                 children: [
                   for (final m in PaymentMethod.values)
                     ChoiceChip(
-                      avatar: Icon(m.icon, size: 18, color: _method == m ? c.brand : c.textSecondary),
+                      avatar: Icon(m.icon, size: 18, color: _method == m ? Colors.white : c.textSecondary),
                       label: Text(m.label),
                       selected: _method == m,
-                      labelStyle: TextStyle(color: _method == m ? c.brand : c.text, fontWeight: FontWeight.w600),
+                      labelStyle: TextStyle(color: _method == m ? Colors.white : c.text, fontWeight: FontWeight.w700),
                       onSelected: (_) => setState(() => _method = m),
                     ),
                 ],

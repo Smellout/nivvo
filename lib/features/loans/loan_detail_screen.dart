@@ -8,6 +8,7 @@ import '../../core/utils/dates.dart';
 import '../../shared/models/loan.dart';
 import '../../shared/repositories/repository_providers.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/reason_sheet.dart';
 import '../../shared/widgets/status_badge.dart';
@@ -28,9 +29,9 @@ class LoanDetailScreen extends ConsumerWidget {
     final today = ref.watch(todayProvider);
     final loan = detail.value?.loan;
 
-    return Scaffold(
+    return NivvoScaffold(
+      aurora: 0.9,
       appBar: AppBar(
-        title: Text(loan?.clientName ?? 'Operação'),
         actions: [
           if (loan != null)
             PopupMenuButton<String>(
@@ -100,10 +101,10 @@ class _DetailBody extends ConsumerWidget {
     final timeline = LoanStatementBuilder.timeline(detail, today);
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: 40),
+      padding: const EdgeInsets.only(bottom: 48),
       children: [
         _Header(loan: loan, status: status, today: today),
-        if (loan.isActive) _Actions(loan: loan, status: status),
+        if (loan.isActive) _Actions(loan: loan, status: status) else const SizedBox(height: 8),
         const SectionTitle('Extrato da operação'),
         _StatementCard(statement: statement, loan: loan),
         const SectionTitle('Histórico'),
@@ -115,6 +116,7 @@ class _DetailBody extends ConsumerWidget {
   }
 }
 
+/// Cabeçalho centralizado sobre a aurora: cliente, status e saldo em destaque.
 class _Header extends StatelessWidget {
   const _Header({required this.loan, required this.status, required this.today});
 
@@ -132,78 +134,85 @@ class _Header extends StatelessWidget {
       LoanDisplayStatus.cancelled => 'Cancelada',
       _ => '${Dates.relativeDue(loan.dueDate, today)} · ${Dates.short(loan.dueDate)}',
     };
+    final initials = loan.clientName.trim().split(RegExp(r'\s+')).take(2).map((p) => p[0].toUpperCase()).join();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+      child: Column(
+        children: [
+          InitialsAvatar(initials, size: 60, color: NivvoPalette.blueSoft),
+          const SizedBox(height: 12),
+          Text(loan.clientName, style: context.text.titleLarge, textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 6,
+            runSpacing: 6,
             children: [
-              Row(
-                children: [
-                  StatusBadge(status),
-                  if (loan.isActive && loan.paidCents > 0 && status != LoanDisplayStatus.partial) ...[
-                    const SizedBox(width: 6),
-                    const StatusBadge(LoanDisplayStatus.partial, compact: true),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text('Saldo atual', style: TextStyle(color: c.textSecondary, fontSize: 14)),
-              const SizedBox(height: 4),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  Money.format(loan.remainingCents),
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1.2,
-                    color: status == LoanDisplayStatus.overdue ? c.danger : c.text,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  color: c.success,
-                  backgroundColor: c.surfaceHigh,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Pago ${Money.format(loan.paidCents)} de ${Money.format(total)}',
-                      style: TextStyle(color: c.textSecondary, fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Icon(Icons.event_rounded, size: 18, color: status.color(c)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      dueText,
-                      style: TextStyle(color: status.color(c), fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
+              StatusBadge(status),
+              if (loan.isActive && loan.paidCents > 0 && status != LoanDisplayStatus.partial)
+                const StatusBadge(LoanDisplayStatus.partial),
             ],
           ),
-        ),
+          const SizedBox(height: 26),
+          Text(
+            'Saldo atual',
+            style: TextStyle(color: c.text.withValues(alpha: 0.75), fontSize: 14.5, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          BigAmount(
+            Money.format(loan.remainingCents),
+            size: 48,
+            color: status == LoanDisplayStatus.overdue ? c.danger : null,
+          ),
+          const SizedBox(height: 18),
+          FrostedGlass(
+            radius: 20,
+            blur: 16,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 6,
+                    color: c.success,
+                    backgroundColor: c.surfaceHigh,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Pago ${Money.format(loan.paidCents)} de ${Money.format(total)}',
+                        style: TextStyle(color: c.textSecondary, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Text(
+                      '${(progress * 100).round()}%',
+                      style: TextStyle(color: c.text, fontSize: 13, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.event_rounded, size: 16, color: status.color(c)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        dueText,
+                        style: TextStyle(color: status.color(c), fontWeight: FontWeight.w700, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -217,40 +226,41 @@ class _Actions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    final overdue = status == LoanDisplayStatus.overdue;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(12, 24, 12, 0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Expanded(
-            flex: 3,
-            child: FilledButton.icon(
-              onPressed: () async {
-                final ok = await showRegisterPayment(context, loan);
-                if (ok == true && context.mounted) AppFeedback.success(context, 'Pagamento registrado');
-              },
-              icon: const Icon(Icons.south_west_rounded),
-              label: const Text('Registrar pagamento'),
-            ),
+          RoundAction(
+            icon: Icons.south_west_rounded,
+            label: 'Pagamento',
+            primary: true,
+            onTap: () async {
+              final ok = await showRegisterPayment(context, loan);
+              if (ok == true && context.mounted) AppFeedback.success(context, 'Pagamento registrado');
+            },
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: OutlinedButton.icon(
-              style: overdue
-                  ? OutlinedButton.styleFrom(
-                      foregroundColor: c.warning,
-                      side: BorderSide(color: c.warning.withValues(alpha: 0.6)),
-                    )
-                  : null,
-              onPressed: () async {
-                final ok = await showAddCharge(context, loan);
-                if (ok == true && context.mounted) AppFeedback.success(context, 'Encargo lançado');
-              },
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Encargo'),
-            ),
+          RoundAction(
+            icon: Icons.done_all_rounded,
+            label: 'Quitar',
+            onTap: () async {
+              final ok = await showRegisterPayment(context, loan, settle: true);
+              if (ok == true && context.mounted) AppFeedback.success(context, 'Operação quitada');
+            },
+          ),
+          RoundAction(
+            icon: Icons.add_rounded,
+            label: 'Encargo',
+            badge: status == LoanDisplayStatus.overdue,
+            onTap: () async {
+              final ok = await showAddCharge(context, loan);
+              if (ok == true && context.mounted) AppFeedback.success(context, 'Encargo lançado');
+            },
+          ),
+          RoundAction(
+            icon: Icons.person_outline_rounded,
+            label: 'Cliente',
+            onTap: () => context.push('/client/${loan.clientId}'),
           ),
         ],
       ),

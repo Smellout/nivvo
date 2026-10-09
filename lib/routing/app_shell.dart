@@ -1,8 +1,9 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../core/config/env.dart';
 import '../features/notifications/reminder_service.dart';
 import '../theme/app_colors.dart';
 import '../shared/widgets/common.dart';
@@ -50,72 +51,71 @@ class _AppShellState extends ConsumerState<AppShell> {
     ref.watch(reminderSyncProvider);
     final index = widget.shell.currentIndex;
 
+    final c = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      body: Column(
-        children: [
-          SafeArea(bottom: false, child: Column(children: [if (Env.demo) const _DemoBanner(), const OfflineBanner()])),
-          Expanded(
-            child: MediaQuery.removePadding(context: context, removeTop: true, child: widget.shell),
-          ),
-        ],
+      backgroundColor: c.background,
+      // O conteúdo passa por trás da barra de navegação de vidro.
+      extendBody: true,
+      body: Builder(
+        builder: (context) => Stack(
+          children: [
+            widget.shell,
+            const Positioned(top: 0, left: 0, right: 0, child: SafeArea(bottom: false, child: OfflineBanner())),
+          ],
+        ),
       ),
-      floatingActionButton: index == 4
-          ? null
-          : FloatingActionButton(
+      // No Início a ação "Nova" já está em destaque; nas listas, o botão flutuante.
+      floatingActionButton: index == 1 || index == 2
+          ? FloatingActionButton(
               heroTag: 'new-loan',
               tooltip: 'Nova operação',
               onPressed: () => context.push('/new-loan'),
-              child: const Icon(Icons.add_rounded, size: 28),
+              child: const Icon(Icons.add_rounded, size: 30),
+            )
+          : null,
+      bottomNavigationBar: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: isDark ? c.background.withValues(alpha: 0.72) : Colors.white.withValues(alpha: 0.78),
+              border: Border(top: BorderSide(color: c.border)),
             ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: _onTab,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.space_dashboard_outlined),
-            selectedIcon: Icon(Icons.space_dashboard_rounded),
-            label: 'Início',
+            child: NavigationBar(
+              selectedIndex: index,
+              onDestinationSelected: _onTab,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: 'Início',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.swap_vert_rounded),
+                  selectedIcon: Icon(Icons.swap_vert_rounded),
+                  label: 'Operações',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.people_outline_rounded),
+                  selectedIcon: Icon(Icons.people_rounded),
+                  label: 'Clientes',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.bar_chart_rounded),
+                  selectedIcon: Icon(Icons.bar_chart_rounded),
+                  label: 'Relatórios',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.tune_rounded),
+                  selectedIcon: Icon(Icons.tune_rounded),
+                  label: 'Ajustes',
+                ),
+              ],
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.swap_vert_rounded),
-            selectedIcon: Icon(Icons.swap_vert_circle_rounded),
-            label: 'Operações',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline_rounded),
-            selectedIcon: Icon(Icons.people_rounded),
-            label: 'Clientes',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.insights_outlined),
-            selectedIcon: Icon(Icons.insights_rounded),
-            label: 'Relatórios',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.tune_rounded),
-            selectedIcon: Icon(Icons.settings_rounded),
-            label: 'Ajustes',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DemoBanner extends StatelessWidget {
-  const _DemoBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      width: double.infinity,
-      color: c.brand.withValues(alpha: 0.14),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Text(
-        'Modo demonstração · dados fictícios, nada é salvo',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: c.brand, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }

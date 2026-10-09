@@ -9,6 +9,7 @@ import '../../core/utils/validators.dart';
 import '../../shared/models/client.dart';
 import '../../shared/repositories/repository_providers.dart';
 import '../../shared/services/core_providers.dart';
+import '../../shared/widgets/aurora.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/money_input.dart';
 import '../../theme/app_colors.dart';
@@ -164,7 +165,7 @@ class _NewLoanScreenState extends ConsumerState<NewLoanScreen> {
     final c = context.colors;
     final quote = _quote;
 
-    return Scaffold(
+    return NivvoScaffold(
       appBar: AppBar(
         title: const Text('Nova operação'),
         leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => context.pop()),
@@ -369,13 +370,12 @@ class _ClientSection extends ConsumerWidget {
               child: OutlinedButton.icon(
                 onPressed: onPick,
                 icon: const Icon(Icons.search_rounded),
-                label: const Text('Cliente existente'),
+                label: const Text('Buscar'),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: FilledButton.tonalIcon(
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
+              child: OutlinedButton.icon(
                 onPressed: onNew,
                 icon: const Icon(Icons.person_add_alt_1_rounded),
                 label: const Text('Novo cliente'),
@@ -431,7 +431,7 @@ class _QuickChips<T> extends StatelessWidget {
           ChoiceChip(
             label: Text(label(v)),
             selected: v == selected,
-            labelStyle: TextStyle(color: v == selected ? c.brand : c.text, fontWeight: FontWeight.w600),
+            labelStyle: TextStyle(color: v == selected ? Colors.white : c.text, fontWeight: FontWeight.w700),
             onSelected: (_) => onSelected(v),
           ),
       ],
