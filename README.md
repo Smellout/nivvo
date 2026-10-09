@@ -5,20 +5,21 @@ empréstimo: clientes, juros, vencimentos, encargos, pagamentos parciais, histó
 O dinheiro circula fora do app — o Nivvo é a camada de controle.
 
 <p>
-  <img src="docs/telas/dashboard_dark.png" width="200">
-  <img src="docs/telas/new_loan_filled.png" width="200">
-  <img src="docs/telas/loan_detail.png" width="200">
-  <img src="docs/telas/dashboard_light.png" width="200">
+  <img src="docs/telas/inicio.png" width="420">
+  <img src="docs/telas/detalhes.png" width="420">
+</p>
+<p>
+  <img src="docs/telas/nova_operacao.png" width="420">
+  <img src="docs/telas/operacoes.png" width="420">
 </p>
 
-> As prévias foram geradas em ambiente de teste: rótulos de botões aparecem como blocos por falta da
-> fonte do sistema. No aparelho o texto é renderizado normalmente.
+> Prévias do modo demonstração rodando no navegador (dados fictícios).
 
 Decisões de arquitetura, segurança e regras financeiras: [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 
 ## Stack
 
-Flutter 3.47 · Dart 3.13 · Material 3 (`material_ui`) · Riverpod 3 · go_router 18 · Supabase (Auth + PostgreSQL + RLS) ·
+Flutter 3.47 · Dart 3.13 · Material 3 (`material_ui`) · fonte Manrope (OFL) · Riverpod 3 · go_router 18 · Supabase (Auth + PostgreSQL + RLS) ·
 notificações locais agendadas.
 
 ## Como rodar
