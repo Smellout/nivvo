@@ -61,7 +61,10 @@ class AppException implements Exception {
         return const AppException('Já existe um cliente com este CPF.');
       }
       if (error.code == '23503') {
-        return const AppException('Registro em uso por outras operações.');
+        return const AppException(
+          'Este cliente possui operações registradas e não pode ser excluído. '
+          'O histórico financeiro é preservado.',
+        );
       }
       if (error.code == '23514') return const AppException('Dados inválidos.');
       if (error.code == '42501' || error.code == 'PGRST301') {

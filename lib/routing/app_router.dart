@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/env.dart';
 import '../features/auth/auth_screens.dart';
 import '../features/clients/client_detail_screen.dart';
+import '../features/clients/client_form_screen.dart';
 import '../features/clients/clients_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/loans/loan_detail_screen.dart';
@@ -80,6 +81,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/loan/:id',
         builder: (_, state) => LoanDetailScreen(loanId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/client-form',
+        builder: (_, state) => ClientFormScreen(initialName: state.uri.queryParameters['name']),
+      ),
+      GoRoute(
+        path: '/client/:id/edit',
+        builder: (_, state) => ClientFormScreen(clientId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/client/:id',

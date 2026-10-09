@@ -51,7 +51,9 @@ class LoanTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    showClient ? loan.clientName : 'Operação de ${Dates.short(loan.startDate)}',
+                    showClient
+                        ? loan.clientName
+                        : '${Money.format(loan.principalCents)} · ${Dates.dayMonthShort(loan.startDate)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),

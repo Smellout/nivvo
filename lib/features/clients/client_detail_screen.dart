@@ -12,6 +12,7 @@ import '../../shared/widgets/common.dart';
 import '../../shared/widgets/loan_tile.dart';
 import '../../theme/app_colors.dart';
 import '../loans/loans_providers.dart';
+import 'client_form_screen.dart';
 import 'client_sheets.dart';
 import 'clients_providers.dart';
 
@@ -32,12 +33,22 @@ class ClientDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(client?.name ?? 'Cliente'),
         actions: [
-          if (client != null)
+          if (client != null) ...[
             IconButton(
               tooltip: 'Editar',
               icon: const Icon(Icons.edit_outlined),
               onPressed: () => showClientForm(context, client: client),
             ),
+            PopupMenuButton<String>(
+              onSelected: (v) async {
+                if (v == 'delete' && summary.value != null) {
+                  final deleted = await confirmAndDeleteClient(context, ref, summary.value!);
+                  if (deleted && context.mounted) context.go('/clients');
+                }
+              },
+              itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Excluir cliente'))],
+            ),
+          ],
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

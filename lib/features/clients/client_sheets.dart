@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/money/money.dart';
 import '../../core/utils/validators.dart';
 import '../../shared/models/client.dart';
-import '../../shared/repositories/repository_providers.dart';
-import '../../shared/services/core_providers.dart';
 import '../../shared/widgets/common.dart';
 import '../../theme/app_colors.dart';
 import 'clients_providers.dart';
@@ -49,140 +48,13 @@ const cpfMask = _MaskFormatter(_cpfMask);
 String _phoneMask(int n) => n <= 10 ? '(##) ####-####' : '(##) #####-####';
 String _cpfMask(int _) => '###.###.###-##';
 
-/// Cadastro/edição de cliente em bottom sheet. Retorna o [Client] salvo.
+/// Abre a tela de cadastro (ou edição, com [client]) e devolve o cliente salvo.
 Future<Client?> showClientForm(BuildContext context, {Client? client, String? initialName}) {
-  return showModalBottomSheet<Client>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (_) => _ClientForm(client: client, initialName: initialName),
+  if (client != null) return context.push<Client>('/client/${client.id}/edit');
+  final name = initialName?.trim() ?? '';
+  return context.push<Client>(
+    Uri(path: '/client-form', queryParameters: name.isEmpty ? null : {'name': name}).toString(),
   );
-}
-
-class _ClientForm extends ConsumerStatefulWidget {
-  const _ClientForm({this.client, this.initialName});
-
-  final Client? client;
-  final String? initialName;
-
-  @override
-  ConsumerState<_ClientForm> createState() => _ClientFormState();
-}
-
-class _ClientFormState extends ConsumerState<_ClientForm> {
-  final _form = GlobalKey<FormState>();
-  late final _name = TextEditingController(text: widget.client?.name ?? widget.initialName ?? '');
-  late final _phone = TextEditingController(
-    text: widget.client?.phone == null ? '' : Formatters.phone(widget.client!.phone),
-  );
-  late final _cpf = TextEditingController(text: widget.client?.cpf == null ? '' : Formatters.cpf(widget.client!.cpf));
-  late final _notes = TextEditingController(text: widget.client?.notes ?? '');
-  late bool _showMore = widget.client != null && (widget.client!.cpf != null || widget.client!.notes != null);
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    for (final c in [_name, _phone, _cpf, _notes]) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    if (!_form.currentState!.validate()) return;
-    setState(() => _busy = true);
-    final input = ClientInput(
-      name: _name.text,
-      phone: Validators.digitsOnly(_phone.text),
-      cpf: Validators.digitsOnly(_cpf.text),
-      notes: _notes.text,
-    );
-    try {
-      final repo = ref.read(clientsRepositoryProvider);
-      final saved = widget.client == null ? await repo.create(input) : await repo.update(widget.client!.id, input);
-      ref.read(dataRevisionProvider.notifier).bump();
-      if (mounted) Navigator.pop(context, saved);
-    } catch (e) {
-      if (mounted) AppFeedback.error(context, e);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Form(
-          key: _form,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(widget.client == null ? 'Novo cliente' : 'Editar cliente', style: context.text.titleLarge),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _name,
-                autofocus: widget.client == null,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(labelText: 'Nome'),
-                validator: Validators.name,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _phone,
-                keyboardType: TextInputType.phone,
-                inputFormatters: const [phoneMask],
-                textInputAction: _showMore ? TextInputAction.next : TextInputAction.done,
-                decoration: const InputDecoration(labelText: 'Telefone (opcional)'),
-                validator: Validators.phone,
-                onFieldSubmitted: (_) => _showMore ? null : _save(),
-              ),
-              if (!_showMore)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() => _showMore = true),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('CPF e observações'),
-                  ),
-                )
-              else ...[
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _cpf,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: const [cpfMask],
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: 'CPF (opcional)'),
-                  validator: Validators.cpf,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _notes,
-                  maxLines: 3,
-                  minLines: 2,
-                  maxLength: 1000,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(labelText: 'Observações'),
-                ),
-              ],
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: c.text))
-                    : Text(widget.client == null ? 'Salvar cliente' : 'Salvar alterações'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// Seletor de cliente com busca e "Novo cliente" sem sair do fluxo.

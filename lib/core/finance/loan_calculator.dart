@@ -11,16 +11,19 @@ enum LoanLifecycle {
 
 /// Status exibido ao usuário.
 enum LoanDisplayStatus {
-  pending('Pendente'),
-  partial('Pagamento parcial'),
-  dueSoon('Próxima do vencimento'),
-  dueToday('Vence hoje'),
-  overdue('Vencida'),
-  paid('Paga'),
-  cancelled('Cancelada');
+  pending('Pendente', 'Pendente'),
+  partial('Pagamento parcial', 'Parcial'),
+  dueSoon('Próxima do vencimento', 'Vencendo'),
+  dueToday('Vence hoje', 'Hoje'),
+  overdue('Vencida', 'Vencida'),
+  paid('Paga', 'Paga'),
+  cancelled('Cancelada', 'Cancelada');
 
-  const LoanDisplayStatus(this.label);
+  const LoanDisplayStatus(this.label, this.shortLabel);
   final String label;
+
+  /// Rótulo curto para listas, onde o espaço é disputado.
+  final String shortLabel;
 
   bool get isOpen => this != paid && this != cancelled;
 }

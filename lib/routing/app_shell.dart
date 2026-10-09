@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../features/notifications/reminder_service.dart';
+import '../shared/models/client.dart';
 import '../theme/app_colors.dart';
 import '../shared/widgets/common.dart';
 
@@ -67,14 +68,24 @@ class _AppShellState extends ConsumerState<AppShell> {
         ),
       ),
       // No Início a ação "Nova" já está em destaque; nas listas, o botão flutuante.
-      floatingActionButton: index == 1 || index == 2
-          ? FloatingActionButton(
-              heroTag: 'new-loan',
-              tooltip: 'Nova operação',
-              onPressed: () => context.push('/new-loan'),
-              child: const Icon(Icons.add_rounded, size: 30),
-            )
-          : null,
+      floatingActionButton: switch (index) {
+        1 => FloatingActionButton(
+          heroTag: 'new-loan',
+          tooltip: 'Nova operação',
+          onPressed: () => context.push('/new-loan'),
+          child: const Icon(Icons.add_rounded, size: 30),
+        ),
+        2 => FloatingActionButton.extended(
+          heroTag: 'new-client',
+          onPressed: () async {
+            final created = await context.push<Client>('/client-form');
+            if (created != null && context.mounted) context.push('/client/${created.id}');
+          },
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: const Text('Novo cliente'),
+        ),
+        _ => null,
+      },
       bottomNavigationBar: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),

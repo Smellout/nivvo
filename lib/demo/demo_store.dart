@@ -77,6 +77,16 @@ class DemoStore {
     return updated;
   }
 
+  void deleteClient(String id) {
+    if (!_clients.containsKey(id)) _fail('client_not_found');
+    // Mesmo comportamento da FK do banco: cliente com operações não pode ser excluído.
+    if (_loans.values.any((l) => l.clientId == id)) {
+      throw AppException.from(const PostgrestException(message: 'violates foreign key constraint', code: '23503'));
+    }
+    _clients.remove(id);
+    _touched.remove(id);
+  }
+
   ClientSummary clientSummary(String id) {
     final client = _clients[id] ?? _fail('client_not_found');
     final loans = _loans.values.where((l) => l.clientId == id);
@@ -542,6 +552,9 @@ class DemoStore {
     final rafael = client('Rafael Santos', '51944332211');
     final juliana = client('Juliana Alves', '61933221100');
     final pedro = client('Pedro Rocha', '71922110099');
+    // Clientes sem operações (podem ser excluídos na demonstração).
+    client('Lucas Martins', '11955557777');
+    client('Fernanda Ribeiro', '21944446666');
 
     // O exemplo da especificação: 300 + 45 + encargos 60 − pagamento 100 = 305.
     final l1 = loan(fulano, 300, 15, 30, -38);

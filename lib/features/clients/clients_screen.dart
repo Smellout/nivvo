@@ -153,7 +153,9 @@ class _ClientTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     [
-                      '${summary.loansCount} ${summary.loansCount == 1 ? 'operação' : 'operações'}',
+                      summary.loansCount == 0
+                          ? 'Sem operações'
+                          : '${summary.loansCount} ${summary.loansCount == 1 ? 'operação' : 'operações'}',
                       if (client.phone != null) Formatters.phone(client.phone),
                     ].join(' · '),
                     style: TextStyle(color: c.textSecondary, fontSize: 13),
@@ -176,7 +178,7 @@ class _ClientTile extends StatelessWidget {
                 Text(
                   summary.overdueCount > 0
                       ? '${summary.overdueCount} ${summary.overdueCount == 1 ? 'vencida' : 'vencidas'}'
-                      : 'em aberto',
+                      : (summary.balanceCents > 0 ? 'em aberto' : 'sem saldo'),
                   style: TextStyle(
                     fontSize: 12,
                     color: summary.overdueCount > 0 ? c.danger : c.textSecondary,

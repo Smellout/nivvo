@@ -1,3 +1,4 @@
+import '../../core/errors/app_exception.dart';
 import '../models/client.dart';
 import 'repository_base.dart';
 
@@ -46,6 +47,14 @@ class ClientsRepository extends RepositoryBase {
     return write(() async {
       final data = await client.from('clients').update(input.toJson()).eq('id', id).select().single();
       return Client.fromJson(data);
+    });
+  }
+
+  /// Exclui definitivamente. O banco recusa (FK) se o cliente tiver operações.
+  Future<void> delete(String id) {
+    return write(() async {
+      final deleted = await client.from('clients').delete().eq('id', id).select('id');
+      if (deleted.isEmpty) throw const AppException('Cliente não encontrado.');
     });
   }
 }

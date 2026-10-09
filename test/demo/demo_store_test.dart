@@ -54,4 +54,18 @@ void main() {
     expect(detail.loan.lifecycle, LoanLifecycle.active);
     expect(detail.loan.remainingCents, loan.remainingCents);
   });
+
+  test('exclusão de cliente: permitida sem operações, bloqueada com operações', () {
+    final store = DemoStore(today: today);
+    final withLoans = store.clients(query: 'fulano').single.client;
+    final withoutLoans = store.clients(query: 'lucas').single.client;
+
+    expect(
+      () => store.deleteClient(withLoans.id),
+      throwsA(isA<AppException>().having((e) => e.message, 'message', contains('não pode ser excluído'))),
+    );
+    store.deleteClient(withoutLoans.id);
+    expect(store.clients(query: 'lucas'), isEmpty);
+    expect(store.clients(query: 'fulano'), hasLength(1));
+  });
 }

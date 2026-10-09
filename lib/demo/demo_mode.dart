@@ -86,6 +86,9 @@ class _DemoClientsRepository extends ClientsRepository {
 
   @override
   Future<Client> update(String id, ClientInput input) => _later(() => store.updateClient(id, input));
+
+  @override
+  Future<void> delete(String id) => _later(() => store.deleteClient(id));
 }
 
 class _DemoLoansRepository extends LoansRepository {

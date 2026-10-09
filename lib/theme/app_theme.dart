@@ -125,7 +125,9 @@ abstract final class AppTheme {
         foregroundColor: Colors.white,
         elevation: 6,
         highlightElevation: 8,
-        shape: const CircleBorder(),
+        shape: const StadiumBorder(),
+        extendedTextStyle: _t(15, FontWeight.w800, Colors.white),
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 22),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
