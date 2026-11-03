@@ -120,8 +120,11 @@ para o MVP e com pontos de falha.
 - Funcionam offline e sem servidor.
 - A cada abertura do app e após qualquer alteração, o agendamento é **refeito do zero** a partir
   das operações ativas → quando a operação é quitada, os lembretes somem automaticamente.
-- Lembretes às 09:00: 7 dias antes, 3 dias antes, 1 dia antes, no dia e 1 dia após vencer.
-- Limite de 400 lembretes (o Android limita alarmes por app), priorizando os mais próximos.
+- Resumo diário às 09:00 (no máximo dois avisos por dia, agrupando todas as operações):
+  - "Você tem operações chegando no prazo!" — operações que vencem de hoje a 3 dias
+    (mesma janela do filtro "Vencendo"); o toque abre Operações › Vencendo.
+  - "Operação(ões) vencida(s)" — venceram no dia anterior; o toque abre Operações › Vencidas.
+- Agendamento para os próximos 42 dias (bem abaixo do limite de alarmes por app do Android).
 - Agendamento **inexato** (`inexactAllowWhileIdle`): não exige a permissão restrita de alarme
   exato do Android 14.
 - A tabela `notifications` já existe no banco para a fase 2 (FCM + Edge Function), quando

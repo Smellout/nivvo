@@ -102,53 +102,59 @@ void main() {
   });
 
   group('Lembretes', () {
-    final loan = ReminderLoan(
-      loanId: 'l1',
-      clientName: 'Fulano',
-      remainingCents: 34500,
-      dueDate: DateTime.utc(2026, 11, 7),
-    );
+    ReminderLoan loan(String id, String name, int cents, DateTime due) =>
+        ReminderLoan(loanId: id, clientName: name, remainingCents: cents, dueDate: due);
 
-    test('agenda 7, 3, 1 dia antes, no dia e 1 dia depois às 9h', () {
-      final plan = ReminderPlanner.plan([loan], now: DateTime(2026, 10, 1, 10));
-      expect(plan.map((r) => r.at), [
-        DateTime(2026, 10, 31, 9),
-        DateTime(2026, 11, 4, 9),
-        DateTime(2026, 11, 6, 9),
-        DateTime(2026, 11, 7, 9),
-        DateTime(2026, 11, 8, 9),
+    final fulano = loan('l1', 'Fulano', 34500, DateTime.utc(2026, 11, 7));
+
+    test('avisa às 9h de 3 dias antes até o dia, e no dia seguinte ao vencimento', () {
+      final plan = ReminderPlanner.plan([fulano], now: DateTime(2026, 10, 1, 10));
+      expect(plan.map((r) => (r.at, r.route)), [
+        (DateTime(2026, 11, 4, 9), ReminderPlanner.dueSoonRoute),
+        (DateTime(2026, 11, 5, 9), ReminderPlanner.dueSoonRoute),
+        (DateTime(2026, 11, 6, 9), ReminderPlanner.dueSoonRoute),
+        (DateTime(2026, 11, 7, 9), ReminderPlanner.dueSoonRoute),
+        (DateTime(2026, 11, 8, 9), ReminderPlanner.overdueRoute),
       ]);
-      expect(plan.first.body, r'Fulano possui R$ 345,00 a receber em 7 dias.');
-      expect(plan[3].title, 'Operação vence hoje');
+      expect(plan.first.title, 'Você tem operações chegando no prazo!');
+      expect(plan.first.body, r'A operação de Fulano vence em 3 dias — R$ 345,00 a receber.');
+      expect(plan[2].body, contains('vence amanhã'));
+      expect(plan[3].body, contains('vence hoje'));
+      expect(plan[4].body, r'A operação de Fulano venceu ontem — R$ 345,00 a receber.');
+    });
+
+    test('junta várias operações em um único aviso por dia', () {
+      final plan = ReminderPlanner.plan([
+        fulano,
+        loan('l2', 'Maria', 80000, DateTime.utc(2026, 11, 6)),
+      ], now: DateTime(2026, 11, 5, 8));
+      final today = plan.where((r) => r.at == DateTime(2026, 11, 5, 9)).toList();
+      expect(today, hasLength(1));
+      expect(today.single.body, r'2 operações vencem em até 3 dias — R$ 1.145,00 a receber. Toque para ver.');
+      expect(plan.map((r) => r.id).toSet().length, plan.length);
     });
 
     test('não agenda horários passados nem operações quitadas', () {
       final plan = ReminderPlanner.plan([
-        loan,
-        ReminderLoan(loanId: 'l2', clientName: 'Pago', remainingCents: 0, dueDate: DateTime.utc(2026, 11, 7)),
+        fulano,
+        loan('l2', 'Pago', 0, DateTime.utc(2026, 11, 7)),
       ], now: DateTime(2026, 11, 6, 10));
-      expect(plan.length, 2);
-      expect(plan.every((r) => r.loanId == 'l1'), isTrue);
+      expect(plan.map((r) => r.at), [DateTime(2026, 11, 7, 9), DateTime(2026, 11, 8, 9)]);
+      expect(plan.any((r) => r.body.contains('Pago')), isFalse);
     });
 
     test('ocultar valores remove o valor do texto', () {
-      final plan = ReminderPlanner.plan([loan], now: DateTime(2026, 10, 1), hideAmounts: true);
+      final plan = ReminderPlanner.plan([fulano], now: DateTime(2026, 10, 1), hideAmounts: true);
+      expect(plan, isNotEmpty);
       expect(plan.any((r) => r.body.contains(r'R$')), isFalse);
     });
 
-    test('respeita o limite de lembretes', () {
-      final many = [
-        for (var i = 0; i < 200; i++)
-          ReminderLoan(
-            loanId: '$i',
-            clientName: 'C$i',
-            remainingCents: 100,
-            dueDate: DateTime.utc(2026, 12, 1 + i % 28),
-          ),
-      ];
-      final plan = ReminderPlanner.plan(many, now: DateTime(2026, 10, 1));
-      expect(plan.length, ReminderPlanner.maxReminders);
-      expect(plan.map((r) => r.id).toSet().length, plan.length);
+    test('limita o agendamento ao horizonte', () {
+      final plan = ReminderPlanner.plan([
+        for (var i = 0; i < 200; i++) loan('$i', 'C$i', 100, DateTime.utc(2026, 10, 1 + i)),
+      ], now: DateTime(2026, 10, 1, 10));
+      expect(plan.last.at.isBefore(DateTime(2026, 10, 1 + ReminderPlanner.horizonDays + 1)), isTrue);
+      expect(plan.length, lessThanOrEqualTo(2 * (ReminderPlanner.horizonDays + 1)));
     });
   });
 }

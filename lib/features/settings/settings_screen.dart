@@ -74,7 +74,7 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   SwitchListTile(
                     title: const Text('Avisar vencimentos'),
-                    subtitle: const Text('7, 3 e 1 dia antes, no dia e após vencer (09:00)'),
+                    subtitle: const Text('Resumo diário às 09:00 de operações chegando no prazo e vencidas'),
                     value: settings.remindersEnabled,
                     onChanged: (v) async {
                       if (v) {

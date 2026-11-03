@@ -23,8 +23,8 @@ class ReminderService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _ready = false;
 
-  /// Id da operação tocada na notificação (o app navega até ela).
-  final ValueNotifier<String?> openedLoanId = ValueNotifier(null);
+  /// Tela indicada pela notificação tocada (o app navega até ela).
+  final ValueNotifier<String?> openedRoute = ValueNotifier(null);
 
   static const _details = NotificationDetails(
     android: AndroidNotificationDetails(
@@ -45,11 +45,11 @@ class ReminderService {
     tz.setLocalLocation(tz.getLocation(timezone));
     await _plugin.initialize(
       settings: const InitializationSettings(android: AndroidInitializationSettings('ic_stat_nivvo')),
-      onDidReceiveNotificationResponse: (r) => openedLoanId.value = r.payload,
+      onDidReceiveNotificationResponse: (r) => openedRoute.value = r.payload,
     );
     final launch = await _plugin.getNotificationAppLaunchDetails();
     if (launch?.didNotificationLaunchApp ?? false) {
-      openedLoanId.value = launch!.notificationResponse?.payload;
+      openedRoute.value = launch!.notificationResponse?.payload;
     }
     _ready = true;
   }
@@ -77,7 +77,7 @@ class ReminderService {
         id: r.id,
         title: r.title,
         body: r.body,
-        payload: r.loanId,
+        payload: r.route,
         scheduledDate: tz.TZDateTime(tz.local, r.at.year, r.at.month, r.at.day, r.at.hour, r.at.minute),
         notificationDetails: _details,
         // Inexato: não exige a permissão restrita de alarme exato (Android 14+).

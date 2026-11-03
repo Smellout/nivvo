@@ -26,6 +26,28 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Run tests
+        run: flutter test
+
+      # Chave de assinatura fixa: sem ela, cada build sai com uma chave diferente
+      # e o Android exige desinstalar o app para atualizar.
+      - name: Set up release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::Secret ANDROID_KEYSTORE_BASE64 ausente: APK assinado com chave de debug temporaria."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/nivvo-release.jks
+          {
+            echo "storeFile=nivvo-release.jks"
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyAlias=nivvo"
+            echo "keyPassword=$KEYSTORE_PASSWORD"
+          } > android/key.properties
+
       - name: Build APK
         run: |
           flutter build apk --release \
@@ -39,10 +61,12 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Get current date
+        if: github.ref == 'refs/heads/main'
         id: date
         run: echo "date=$(date +'%Y-%m-%d-%H%M')" >> $GITHUB_OUTPUT
 
       - name: Create Release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ steps.date.outputs.date }}

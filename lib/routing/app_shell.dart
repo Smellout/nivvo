@@ -29,21 +29,26 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
-    _reminders.openedLoanId.addListener(_openFromNotification);
+    _reminders.openedRoute.addListener(_openFromNotification);
     WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotification());
   }
 
   @override
   void dispose() {
-    _reminders.openedLoanId.removeListener(_openFromNotification);
+    _reminders.openedRoute.removeListener(_openFromNotification);
     super.dispose();
   }
 
   void _openFromNotification() {
-    final id = _reminders.openedLoanId.value;
-    if (id == null || !mounted) return;
-    _reminders.openedLoanId.value = null;
-    context.push('/loan/$id');
+    final route = _reminders.openedRoute.value;
+    if (route == null || !mounted) return;
+    _reminders.openedRoute.value = null;
+    // Lembretes agendados por versões antigas do app traziam só o id da operação.
+    if (route.startsWith('/')) {
+      context.go(route);
+    } else {
+      context.push('/loan/$route');
+    }
   }
 
   void _onTab(int index) {
